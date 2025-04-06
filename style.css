@@ -348,6 +348,60 @@ body {
     padding: 10px;
     font-size: 14px;
   }
+  #position-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+    z-index: 9999;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    padding: 1rem;
+  }
+  
+  #position-popup.hidden {
+    display: none;
+  }
+  
+  
+  #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+  .day {
+    min-height: 60px;
+    font-size: 12px;
+    padding: 4px;
+  }
+  
+  @media (max-width: 600px) {
+    .day {
+      font-size: 10px;
+      padding: 2px;
+      min-height: 50px;
+    }
+  
+    .day-header {
+      font-size: 11px;
+    }
+  
+    #calendar-title {
+      font-size: 16px;
+    }
+  
+    .info {
+      font-size: 9px;
+    }
+  }
   
 
 
