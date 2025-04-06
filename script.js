@@ -41,37 +41,39 @@ popupCancel.addEventListener("click", () => popup.classList.add("hidden"));
 popupSave.addEventListener("click", () => {
     const dateKey = popup.dataset.date;
     const position = popupPosition.value?.trim();
-const isWorked = document.getElementById("popup-confirmed").checked;
-const isHoliday = document.getElementById("popup-holiday").checked;
-const isSick = document.getElementById("popup-sick").checked;
-
-if (!position && !isWorked && !isHoliday && !isSick) {
-  alert("Wybierz stanowisko lub zaznacz urlop/L4/przepracowany dzień.");
-  return;
-}
-
-if (!workedDays[dateKey]) workedDays[dateKey] = {};
-
-workedDays[dateKey].worked = isWorked;
-
-// ✅ ZACHOWAJ poprzednie stanowisko, jeśli nowe puste
-if (position) {
-  workedDays[dateKey].position = position;
-} else if (!workedDays[dateKey].position && isWorked) {
-  // jeśli brak zapisanego stanowiska wcześniej, a zaznaczono "przepracowano"
-  workedDays[dateKey].position = "";
-}
-
-  workedDays[dateKey].extraHours = parseInt(popupOvertime.value) || 0;
-  workedDays[dateKey].isHoliday = document.getElementById("popup-holiday").checked;
-  workedDays[dateKey].isSick = document.getElementById("popup-sick").checked;
-  workedDays[dateKey].note = popupNote.value.trim();
-  workedDays[dateKey].isFreeDayForOvertime = popupOvertimeFreeDay.checked;
-  workedDays[dateKey].freeDayFromOvertime = popupOvertimeFreeDay.checked;
-
-  popup.classList.add("hidden");
-  renderCalendar();
-});
+  
+    const isWorked = document.getElementById("popup-confirmed").checked;
+    const isHoliday = document.getElementById("popup-holiday").checked;
+    const isSick = document.getElementById("popup-sick").checked;
+    const isFreeDay = popupOvertimeFreeDay.checked;
+  
+    if (!position && !isWorked && !isHoliday && !isSick && !isFreeDay) {
+      alert("Wybierz stanowisko lub zaznacz przepracowanie / urlop / zwolnienie / wolne za nadgodziny.");
+      return;
+    }
+  
+    if (!workedDays[dateKey]) workedDays[dateKey] = {};
+  
+    workedDays[dateKey].worked = isWorked;
+    workedDays[dateKey].isHoliday = isHoliday;
+    workedDays[dateKey].isSick = isSick;
+    workedDays[dateKey].note = popupNote.value.trim();
+    workedDays[dateKey].isFreeDayForOvertime = isFreeDay;
+    workedDays[dateKey].freeDayFromOvertime = isFreeDay;
+  
+    // ✅ ZACHOWAJ stanowisko jeśli nowe nie zostało wybrane, ale był plan
+    if (position) {
+      workedDays[dateKey].position = position;
+    } else if (!workedDays[dateKey].position && (isWorked || isFreeDay)) {
+      workedDays[dateKey].position = "";
+    }
+  
+    workedDays[dateKey].extraHours = parseInt(popupOvertime.value) || 0;
+  
+    popup.classList.add("hidden");
+    renderCalendar();
+  });
+  
 
 document.getElementById("remove-note").addEventListener("click", () => {
   const dateKey = popup.dataset.date;
