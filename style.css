@@ -253,7 +253,14 @@ body {
   
 
 
-
+  #position-popup {
+    max-height: 90vh; /* max wysokość na ekranie */
+    overflow-y: auto; /* umożliwia przewijanie */
+    padding: 20px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 12px;
+  }
+  
 
 
 
@@ -354,7 +361,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: white;
+    background: #1e1e1e;
     z-index: 9999;
     overflow-y: auto;
     display: flex;
@@ -404,5 +411,19 @@ body {
   }
   
 
-
+  .cancel-btn {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #ddd;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 16px;
+  }
+  #position-popup {
+    max-height: 100vh;
+    overflow-y: auto;
+    padding-bottom: 4rem; /* miejsce na przycisk */
+  }
+    
   
