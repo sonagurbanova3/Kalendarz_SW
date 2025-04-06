@@ -231,6 +231,7 @@ function renderPositionTable() {
     const td = document.createElement("td");
     const btn = document.createElement("button");
     btn.textContent = `S${i}`;
+    btn.setAttribute('data-position', `S${i}`);
     btn.className = "position-btn";
     btn.addEventListener("click", () => {
       document.querySelectorAll(".position-btn").forEach(b => b.classList.remove("selected"));
