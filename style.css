@@ -1,0 +1,100 @@
+body {
+    font-family: sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+  }
+  .container {
+    max-width: 800px;
+    margin: auto;
+  }
+  #calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+  }
+  .day-header {
+    text-align: center;
+    font-weight: bold;
+    background: #ddd;
+    padding: 5px;
+  }
+  .day {
+    background: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    position: relative;
+  }
+  .day.weekend {
+    background: #cce0ff;
+  }
+  .day.worked {
+    border: 2px solid green;
+  }
+  .day.holiday {
+    background: #aaffaa; /* zielony – urlop */
+  }
+  .day.sick {
+    background: #ffaaaa; /* czerwony – L4 */
+  }
+  .day .info {
+    font-size: 0.8em;
+    color: #333;
+    margin-top: 5px;
+  }
+  .popup {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .popup.hidden {
+    display: none;
+  }
+  .popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+  }
+  .popup-buttons {
+    text-align: right;
+    margin-top: 10px;
+  }
+  .popup-buttons button {
+    margin-left: 10px;
+  }
+  .day.weekend {
+    background: #cce5ff; /* niebieskie tło */
+  }
+  .day.planned {
+    border: 2px dashed orange;
+  }
+  
+
+/* style.css */
+.position-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .position-grid button {
+    padding: 4px 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background: #f4f4f4;
+    border-radius: 4px;
+  }
+  
+  .position-grid button.selected {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  

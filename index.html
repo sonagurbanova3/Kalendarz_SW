@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kalendarz Funkcjonariusza</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Kalendarz Funkcjonariusza</h1>
+
+    <label for="system">Wybierz system pracy:</label>
+    <select id="system">
+      <option value="8">Jednozmianowy (8h)</option>
+      <option value="12">Dwuzmianowy (12h)</option>
+      <option value="48">Czterozmianowy (dzien/noc/48h wolne)</option>
+    </select>
+
+    <div id="calendar-header">
+      <button id="prev-month">&larr;</button>
+      <span id="calendar-title"></span>
+      <button id="next-month">&rarr;</button>
+    </div>
+
+    <div id="calendar"></div>
+
+    <div class="summary">
+      <p>Godziny pracy: <span id="worked-hours">0</span>h</p>
+      <p>Nadgodziny: <span id="overtime">0</span>h</p>
+      <p>Dni urlopu: <span id="holiday-days">0</span></p>
+      <p>Dni L4: <span id="sick-days">0</span></p>
+      <p>Planowane godziny: <span id="planned-hours">0</span>h</p>
+    </div>
+  </div>
+
+  <!-- Popup formularz -->
+  <div id="day-popup" class="popup hidden">
+    <div class="popup-content">
+      <br>
+      <label><input type="checkbox" id="popup-holiday" /> Urlop</label><br>
+      <label><input type="checkbox" id="popup-sick" /> Zwolnienie lekarskie</label><br>
+      <div id="confirmed-wrapper">
+        <label><input type="checkbox" id="popup-confirmed" /> Przepracowano</label><br>
+      </div>
+
+      <h3>Ustawienia dnia: <span id="popup-date"></span></h3>
+     <!-- ZAMIANA SELECTA NA TABELKĘ STANOWISK -->
+<label>Stanowisko:</label>
+<div id="popup-position-grid" class="position-grid"></div>
+<input type="hidden" id="popup-position" />
+
+      <label>Nadgodziny (opcjonalnie):</label>
+      <input type="number" id="popup-overtime" min="0" />
+      <div class="popup-buttons">
+        <button id="popup-save">Zapisz</button>
+        <button id="popup-cancel">Anuluj</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
