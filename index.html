@@ -40,36 +40,39 @@
   </div>
 
   <!-- Popup formularz -->
-  <div id="day-popup" class="popup hidden">
+<div id="day-popup" class="popup hidden">
     <div class="popup-content">
       <br>
       <label><input type="checkbox" id="popup-holiday" /> Urlop</label><br>
       <label><input type="checkbox" id="popup-sick" /> Zwolnienie lekarskie</label><br>
       <label><input type="checkbox" id="popup-overtime-free-day" /> Wolne za nadgodziny</label><br>
-
+  
       <div id="confirmed-wrapper">
         <label><input type="checkbox" id="popup-confirmed" /> Przepracowano</label><br>
       </div>
-
+  
       <h3>Ustawienia dnia: <span id="popup-date"></span></h3>
+  
+      <!-- Przycisk do wyboru stanowiska -->
+      <button id="show-positions-btn">Wybierz stanowisko</button>
+  
       <label for="popup-position">Stanowisko:</label>
-<div id="popup-position" class="position-table"></div>
-
       <select id="popup-position">
         <option value="">Brak</option>
+        <!-- Tu możesz mieć inne opcje jeśli chcesz -->
       </select>
-
+  
       <label>Nadgodziny (opcjonalnie):</label>
       <input type="number" id="popup-overtime" min="0" />
-
+  
       <label>Notatka:</label>
       <textarea id="popup-note" rows="3" placeholder="Notatka..." style="width: 100%; margin-top: 10px;"></textarea>
-
+  
       <div class="popup-buttons">
         <button id="popup-save">Zapisz</button>
         <button id="popup-cancel">Anuluj</button>
       </div>
-
+  
       <div class="popup-remove-buttons">
         <hr>
         <button id="remove-note">Usuń notatkę</button>
@@ -80,6 +83,26 @@
         <button id="remove-all">Usuń wszystkie dane z dnia</button>
       </div>
     </div>
+  </div>
+  
+  <!-- Popup ze stanowiskami -->
+  <div id="position-popup" class="popup hidden">
+    <div class="popup-content">
+      <h3>Wybierz stanowisko</h3>
+      <div class="position-grid">
+        <!-- Generujemy 60 stanowisk -->
+        <script>
+          for (let i = 1; i <= 60; i++) {
+            document.write(`<button class="position-btn" data-position="S${i}">S${i}</button>`);
+          }
+        </script>
+      </div>
+      <div class="popup-buttons" style="margin-top: 20px;">
+        <button id="cancel-position-select">Anuluj</button>
+      </div>
+    </div>
+  </div>
+  
   </div>
 
   <script src="script.js"></script>

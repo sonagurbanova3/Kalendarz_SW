@@ -39,14 +39,14 @@ systemSelect.addEventListener("change", () => {
 popupCancel.addEventListener("click", () => popup.classList.add("hidden"));
 
 popupSave.addEventListener("click", () => {
-  const dateKey = popup.dataset.date;
-  const position = popupPosition.dataset.selected;
-
-  if (!position) {
-    alert("Wybierz stanowisko przed zapisaniem dnia.");
-    return;
-  }
-
+    const dateKey = popup.dataset.date;
+    const position = popupPosition.value?.trim();
+  
+    if (!position) {
+      alert("Wybierz stanowisko przed zapisaniem dnia.");
+      return;
+    }
+  
   if (!workedDays[dateKey]) workedDays[dateKey] = {};
 
   workedDays[dateKey].worked = document.getElementById("popup-confirmed").checked;
@@ -359,3 +359,50 @@ function toggleNote(dateKey, dateObj) {
 }
 
 renderCalendar();
+
+
+const dayPopup = document.getElementById('day-popup');
+const positionPopup = document.getElementById('position-popup');
+const positionSelect = document.getElementById('popup-position');
+
+// Otwórz popup ze stanowiskami
+document.getElementById('show-positions-btn').addEventListener('click', () => {
+  dayPopup.classList.add('hidden');
+  positionPopup.classList.remove('hidden');
+});
+
+// Kliknięcie w stanowisko (S1–S60)
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('position-btn')) {
+    const pos = e.target.getAttribute('data-position');
+    let optionExists = false;
+
+    // Sprawdź, czy opcja istnieje, jeśli nie – dodaj
+    for (let opt of positionSelect.options) {
+      if (opt.value === pos) {
+        optionExists = true;
+        break;
+      }
+    }
+
+    if (!optionExists) {
+      const newOption = document.createElement('option');
+      newOption.value = pos;
+      newOption.textContent = pos;
+      positionSelect.appendChild(newOption);
+    }
+
+    // Ustaw jako wybraną
+    positionSelect.value = pos;
+
+    // Zamknij popup stanowisk, pokaż główny popup
+    positionPopup.classList.add('hidden');
+    dayPopup.classList.remove('hidden');
+  }
+});
+
+// Anuluj wybór stanowiska
+document.getElementById('cancel-position-select').addEventListener('click', () => {
+  positionPopup.classList.add('hidden');
+  dayPopup.classList.remove('hidden');
+});
