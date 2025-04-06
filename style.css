@@ -122,4 +122,45 @@ body {
     background-color: #cde6ff;
     border: 1px dashed #0077cc;
   }
+  .position-table-inner td {
+    padding: 4px;
+  }
+  
+  .position-btn {
+    padding: 4px 8px;
+    border: 1px solid #aaa;
+    background: #eee;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .position-btn.selected {
+    background-color: #4caf50;
+    color: white;
+  }
+  .position-table {
+    max-height: 200px; /* lub inna odpowiednia wysokość */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .position-table-inner {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .position-btn {
+    padding: 4px 8px;
+    margin: 2px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  
+  .position-btn.selected {
+    background-color: #007bff;
+    color: white;
+    border: none;
+  }
   

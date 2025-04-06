@@ -25,7 +25,6 @@
 
     <div id="calendar"></div>
 
-    <!-- Nowy blok wyświetlania notatki -->
     <div id="note-display" class="note-display hidden">
       <h3>Notatka na <span id="note-date"></span></h3>
       <div id="note-content"></div>
@@ -53,10 +52,11 @@
       </div>
 
       <h3>Ustawienia dnia: <span id="popup-date"></span></h3>
-      <label>Stanowisko:</label>
+      <label for="popup-position">Stanowisko:</label>
+<div id="popup-position" class="position-table"></div>
+
       <select id="popup-position">
         <option value="">Brak</option>
-        <!-- Automatycznie generowane -->
       </select>
 
       <label>Nadgodziny (opcjonalnie):</label>
@@ -68,6 +68,16 @@
       <div class="popup-buttons">
         <button id="popup-save">Zapisz</button>
         <button id="popup-cancel">Anuluj</button>
+      </div>
+
+      <div class="popup-remove-buttons">
+        <hr>
+        <button id="remove-note">Usuń notatkę</button>
+        <button id="remove-worked">Usuń "przepracowano"</button>
+        <button id="remove-holiday">Usuń urlop</button>
+        <button id="remove-sick">Usuń L4</button>
+        <button id="remove-overtime">Usuń nadgodziny</button>
+        <button id="remove-all">Usuń wszystkie dane z dnia</button>
       </div>
     </div>
   </div>

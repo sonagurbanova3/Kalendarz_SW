@@ -38,19 +38,19 @@ systemSelect.addEventListener("change", () => {
 
 popupCancel.addEventListener("click", () => popup.classList.add("hidden"));
 
-for (let i = 1; i <= 60; i++) {
-  const opt = document.createElement("option");
-  opt.value = `S${i}`;
-  opt.textContent = `S${i}`;
-  popupPosition.appendChild(opt);
-}
-
 popupSave.addEventListener("click", () => {
   const dateKey = popup.dataset.date;
+  const position = popupPosition.dataset.selected;
+
+  if (!position) {
+    alert("Wybierz stanowisko przed zapisaniem dnia.");
+    return;
+  }
+
   if (!workedDays[dateKey]) workedDays[dateKey] = {};
 
   workedDays[dateKey].worked = document.getElementById("popup-confirmed").checked;
-  workedDays[dateKey].position = popupPosition.value;
+  workedDays[dateKey].position = position;
   workedDays[dateKey].extraHours = parseInt(popupOvertime.value) || 0;
   workedDays[dateKey].isHoliday = document.getElementById("popup-holiday").checked;
   workedDays[dateKey].isSick = document.getElementById("popup-sick").checked;
@@ -58,6 +58,58 @@ popupSave.addEventListener("click", () => {
   workedDays[dateKey].isFreeDayForOvertime = popupOvertimeFreeDay.checked;
   workedDays[dateKey].freeDayFromOvertime = popupOvertimeFreeDay.checked;
 
+  popup.classList.add("hidden");
+  renderCalendar();
+});
+
+document.getElementById("remove-note").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].note;
+    popupNote.value = "";
+    renderCalendar();
+  }
+});
+
+document.getElementById("remove-worked").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].worked;
+    document.getElementById("popup-confirmed").checked = false;
+    renderCalendar();
+  }
+});
+
+document.getElementById("remove-holiday").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].isHoliday;
+    document.getElementById("popup-holiday").checked = false;
+    renderCalendar();
+  }
+});
+
+document.getElementById("remove-sick").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].isSick;
+    document.getElementById("popup-sick").checked = false;
+    renderCalendar();
+  }
+});
+
+document.getElementById("remove-overtime").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    workedDays[dateKey].extraHours = 0;
+    popupOvertime.value = "";
+    renderCalendar();
+  }
+});
+
+document.getElementById("remove-all").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  delete workedDays[dateKey];
   popup.classList.add("hidden");
   renderCalendar();
 });
@@ -123,6 +175,12 @@ function renderCalendar() {
     }
 
     const info = workedDays[dateKey];
+
+    // ✅ Automatyczne oznaczanie dni z przeszłości jako przepracowane
+    if (date < today && info && (info.position || info.extraHours) && !info.worked) {
+      info.worked = true;
+    }
+
     if (info?.isHoliday) div.classList.add("holiday");
     if (info?.isSick) div.classList.add("sick");
     if (info?.isFreeDayForOvertime) div.classList.add("free-day");
@@ -163,13 +221,46 @@ function renderCalendar() {
   updateSummary();
 }
 
+function renderPositionTable() {
+  popupPosition.innerHTML = "";
+  const table = document.createElement("table");
+  table.className = "position-table-inner";
+
+  let tr = document.createElement("tr");
+  for (let i = 1; i <= 60; i++) {
+    const td = document.createElement("td");
+    const btn = document.createElement("button");
+    btn.textContent = `S${i}`;
+    btn.className = "position-btn";
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".position-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      popupPosition.dataset.selected = `S${i}`;
+    });
+    td.appendChild(btn);
+    tr.appendChild(td);
+
+    if (i % 6 === 0) {
+      table.appendChild(tr);
+      tr = document.createElement("tr");
+    }
+  }
+  popupPosition.appendChild(table);
+}
+
 function openPopup(dateKey, dateObj) {
   popup.classList.remove("hidden");
   popup.dataset.date = dateKey;
   popupDate.textContent = `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
 
   const info = workedDays[dateKey] || {};
-  popupPosition.value = info.position || "";
+  renderPositionTable();
+  popupPosition.dataset.selected = info.position || "";
+  if (info.position) {
+    const activeBtn = [...document.querySelectorAll(".position-btn")].find(b => b.textContent === info.position);
+    if (activeBtn) activeBtn.classList.add("selected");
+  }
+
   popupOvertime.value = info.extraHours || "";
   popupNote.value = info.note || "";
   document.getElementById("popup-holiday").checked = !!info.isHoliday;
@@ -192,34 +283,34 @@ function updateSummary() {
   for (const key in workedDays) {
     const info = workedDays[key];
     if (!info) continue;
-  
+
     const [year, month, day] = key.split("-").map(Number);
     const date = new Date(year, month, day);
     const weekday = date.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
     const isExtended = extendedShiftPositions.includes(info.position);
-  
+
     if (info.freeDayFromOvertime) {
       overtime -= 8;
       continue;
     }
-  
+
     if (info.isHoliday) {
       leaveDays++;
       continue;
     }
-  
+
     if (info.isSick) {
       sickDays++;
       continue;
     }
-  
+
     const isPlanned = !info.worked;
-  
+
     if (isPlanned) {
       plannedHours += isExtended ? 12 : 8;
     }
-  
+
     if (info.worked) {
       if (isExtended) {
         hoursWorked += 12;
@@ -228,11 +319,10 @@ function updateSummary() {
         hoursWorked += 8;
         overtime += isWeekend ? 8 : 0;
       }
-  
+
       overtime += info.extraHours || 0;
     }
   }
-  
 
   workedEl.textContent = hoursWorked;
   overtimeEl.textContent = overtime;
