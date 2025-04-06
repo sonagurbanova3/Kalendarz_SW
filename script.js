@@ -23,13 +23,20 @@ const popupOvertimeFreeDay = document.getElementById("popup-overtime-free-day");
 
 const extendedShiftPositions = ["S21", "S22", "S36", "S37", "S39", "S40", "S56"];
 
-let workedDays = {};
+let workedDays = JSON.parse(localStorage.getItem("workedDays")) || {};
+
 let selectedSystem = parseInt(systemSelect.value);
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 
 let currentNoteOpen = null;
+
+
+function saveWorkedDays() {
+    localStorage.setItem("workedDays", JSON.stringify(workedDays));
+  }
+  
 
 systemSelect.addEventListener("change", () => {
   selectedSystem = parseInt(systemSelect.value);
@@ -72,6 +79,8 @@ popupSave.addEventListener("click", () => {
   
     popup.classList.add("hidden");
     renderCalendar();
+    saveWorkedDays();
+
   });
   
 
@@ -80,7 +89,9 @@ document.getElementById("remove-note").addEventListener("click", () => {
   if (workedDays[dateKey]) {
     delete workedDays[dateKey].note;
     popupNote.value = "";
+   
     renderCalendar();
+    saveWorkedDays();
   }
 });
 
@@ -90,6 +101,7 @@ document.getElementById("remove-worked").addEventListener("click", () => {
     delete workedDays[dateKey].worked;
     document.getElementById("popup-confirmed").checked = false;
     renderCalendar();
+    saveWorkedDays();
   }
 });
 
@@ -99,6 +111,7 @@ document.getElementById("remove-holiday").addEventListener("click", () => {
     delete workedDays[dateKey].isHoliday;
     document.getElementById("popup-holiday").checked = false;
     renderCalendar();
+    saveWorkedDays();
   }
 });
 
@@ -108,6 +121,7 @@ document.getElementById("remove-sick").addEventListener("click", () => {
     delete workedDays[dateKey].isSick;
     document.getElementById("popup-sick").checked = false;
     renderCalendar();
+    saveWorkedDays();
   }
 });
 
@@ -117,6 +131,7 @@ document.getElementById("remove-overtime").addEventListener("click", () => {
     workedDays[dateKey].extraHours = 0;
     popupOvertime.value = "";
     renderCalendar();
+    saveWorkedDays();
   }
 });
 
@@ -125,6 +140,7 @@ document.getElementById("remove-all").addEventListener("click", () => {
   delete workedDays[dateKey];
   popup.classList.add("hidden");
   renderCalendar();
+  saveWorkedDays();
 });
 
 prevMonthBtn.addEventListener("click", () => {
@@ -134,6 +150,7 @@ prevMonthBtn.addEventListener("click", () => {
     currentYear--;
   }
   renderCalendar();
+  saveWorkedDays();
 });
 
 nextMonthBtn.addEventListener("click", () => {
@@ -143,6 +160,7 @@ nextMonthBtn.addEventListener("click", () => {
     currentYear++;
   }
   renderCalendar();
+  saveWorkedDays();
 });
 
 function renderCalendar() {
