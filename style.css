@@ -98,3 +98,28 @@ body {
     border-color: #007bff;
   }
   
+  .note-display {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    background: #fdfdfd;
+  }
+  
+  .note-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    cursor: pointer;
+    margin-left: 5px;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .overtime-free {
+    background-color: #cde6ff;
+    border: 1px dashed #0077cc;
+  }
+  
