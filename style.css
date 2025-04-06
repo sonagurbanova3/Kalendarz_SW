@@ -426,4 +426,6 @@ body {
     padding-bottom: 4rem; /* miejsce na przycisk */
   }
     
-  
+.summary{
+    margin-left: 30px;
+  }
