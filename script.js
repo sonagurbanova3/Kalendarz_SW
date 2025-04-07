@@ -468,15 +468,61 @@ document.getElementById('cancel-position-select').addEventListener('click', () =
 
 
 
-document.getElementById("download-button").addEventListener("click", () => {
+/*document.getElementById("download-button").addEventListener("click", () => {
   const dataStr = JSON.stringify(workedDays, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const now = new Date();
+  const formattedDate = now.toISOString().slice(0, 10); // yyyy-mm-dd
+  const fileName = `dane_kalendarza_${formattedDate}.json`;
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+});
+*/
+
+document.getElementById("download-button").addEventListener("click", () => {
+  // Funkcja pomocnicza do bezpiecznego pobierania wartości tekstowych
+  const getTextContent = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.textContent.trim() : "0";
+  };
+
+  // Nowe summary na podstawie właściwych elementów
+  const summary = {
+    workedHours: getTextContent("worked-hours"),
+    overtime: getTextContent("overtime"),
+    holidayDays: getTextContent("holiday-days"),
+    sickDays: getTextContent("sick-days"),
+    plannedHours: getTextContent("planned-hours")
+  };
+
+  // Połączone dane do zapisu
+  const fullData = {
+    workedDays: workedDays, // zakładam, że masz globalnie
+    summary: summary
+  };
+
+  // Format daty do pliku
+  const today = new Date();
+  const dateStr = today.toISOString().split('T')[0]; // yyyy-mm-dd
+
+  // Tworzenie JSON i zapis do pliku
+  const dataStr = JSON.stringify(fullData, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = "dane_kalendarza.json";
+  link.download = `dane_kalendarza_${dateStr}.json`;
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 
   URL.revokeObjectURL(url);
 });
@@ -485,7 +531,7 @@ document.getElementById("download-button").addEventListener("click", () => {
 
 
 
-
+/*
 document.getElementById("load-from-file").addEventListener("click", () => {
   document.getElementById("file-input").click();
 });
@@ -505,5 +551,48 @@ document.getElementById("file-input").addEventListener("change", (event) => {
       alert("❌ Niepoprawny plik JSON");
     }
   };
+  reader.readAsText(file);
+});
+*/
+
+
+document.getElementById("load-from-file").addEventListener("click", () => {
+  document.getElementById("file-input").click();
+});
+
+document.getElementById("file-input").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const loadedData = JSON.parse(e.target.result);
+
+      // Obsługa workedDays
+      if (loadedData.workedDays) {
+        workedDays = loadedData.workedDays;
+      } else {
+        workedDays = loadedData; // dla kompatybilności ze starym formatem
+      }
+
+      renderCalendar();
+
+      // Obsługa summary
+      if (loadedData.summary) {
+        document.getElementById("total-hours").textContent = loadedData.summary.totalHours || "0";
+        document.getElementById("total-overtime").textContent = loadedData.summary.totalOvertime || "0";
+        document.getElementById("night-hours").textContent = loadedData.summary.nightHours || "0";
+        document.getElementById("weekend-hours").textContent = loadedData.summary.weekendHours || "0";
+        document.getElementById("holiday-hours").textContent = loadedData.summary.holidayHours || "0";
+      }
+
+      alert("✅ Dane zostały wczytane z pliku!");
+    } catch (err) {
+      console.error("Błąd parsowania JSON:", err);
+      alert("❌ Niepoprawny plik JSON");
+    }
+  };
+
   reader.readAsText(file);
 });
