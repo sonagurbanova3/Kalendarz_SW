@@ -21,7 +21,7 @@ const sickEl = document.getElementById("sick-days");
 
 const popupOvertimeFreeDay = document.getElementById("popup-overtime-free-day");
 
-const extendedShiftPositions = ["S21", "S22", "S36", "S37", "S39", "S40", "S56"];
+const extendedShiftPositions = ["S21", "S22", "S36", "S37", "S39", "S40", "S56", "S32", "S33",  "S34", "S35"];
 
 let workedDays = JSON.parse(localStorage.getItem("workedDays")) || {};
 
