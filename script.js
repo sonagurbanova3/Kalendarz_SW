@@ -330,33 +330,40 @@ function updateSummary() {
   let plannedHours = 0;
   let leaveDays = 0;
   let sickDays = 0;
+  let currentMonthLeave = 0;
+  let currentMonthSick = 0;
 
   for (const key in workedDays) {
     const info = workedDays[key];
     if (!info) continue;
 
     const [year, month, day] = key.split("-").map(Number);
-
-    // 🔍 Przefiltruj tylko dane z aktualnie wyświetlanego miesiąca
-    if (year !== currentYear || month !== currentMonth) continue;
-
     const date = new Date(year, month, day);
     const weekday = date.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
     const isExtended = extendedShiftPositions.includes(info.position);
+    const extra = info.extraHours || 0;
+
+    const isCurrentMonth = year === currentYear && month === currentMonth;
+    const isInRangeForLeaveAndSick = year === currentYear && month <= currentMonth;
+
+    // 📌 Sumowanie urlopów i zwolnień
+    if (isInRangeForLeaveAndSick) {
+      if (info.isHoliday) {
+        leaveDays++;
+        if (isCurrentMonth) currentMonthLeave++;
+      }
+      if (info.isSick) {
+        sickDays++;
+        if (isCurrentMonth) currentMonthSick++;
+      }
+    }
+
+    // 📌 Sumowanie tylko dla aktualnego miesiąca
+    if (!isCurrentMonth) continue;
 
     if (info.freeDayFromOvertime) {
       overtime -= 8;
-      continue;
-    }
-
-    if (info.isHoliday) {
-      leaveDays++;
-      continue;
-    }
-
-    if (info.isSick) {
-      sickDays++;
       continue;
     }
 
@@ -367,25 +374,36 @@ function updateSummary() {
     }
 
     if (info.worked) {
-      if (isExtended) {
-        hoursWorked += 12;
-        overtime += isWeekend ? 12 : 4;
+      let baseHours = isExtended ? 12 : 8;
+      let baseOvertime = 0;
+
+      if (!isWeekend) {
+        // Pn–Pt
+        if (isExtended) {
+          baseOvertime = 4;
+        } else {
+          baseOvertime = 0;
+        }
       } else {
-        hoursWorked += 8;
-        overtime += isWeekend ? 8 : 0;
+        // Sb–Nd
+        baseOvertime = baseHours;
       }
 
-      overtime += info.extraHours || 0;
+      hoursWorked += baseHours + extra;
+      overtime += baseOvertime + extra;
     }
   }
 
-  // 📌 Ustaw aktualne wartości
+  // 📌 Aktualizacja danych na stronie
   workedEl.textContent = hoursWorked;
   overtimeEl.textContent = formatExtraHours(overtime);
   plannedEl.textContent = plannedHours;
-  holidayEl.textContent = leaveDays;
-  sickEl.textContent = sickDays;
+
+  holidayEl.textContent = `${leaveDays} (z czego ${currentMonthLeave} dni w tym miesiącu)`;
+  sickEl.textContent = `${sickDays} (z czego ${currentMonthSick} dni w tym miesiącu)`;
 }
+
+
 
 
 function formatFullDate(today, year, month) {
@@ -466,7 +484,7 @@ document.getElementById('cancel-position-select').addEventListener('click', () =
 
 
 
-
+/*
 
 document.getElementById("download-button").addEventListener("click", () => {
   const dataStr = JSON.stringify(workedDays, null, 2);
@@ -501,6 +519,65 @@ document.getElementById("file-input").addEventListener("change", (event) => {
   reader.onload = (e) => {
     try {
       workedDays = JSON.parse(e.target.result);
+      renderCalendar();
+      alert("✅ Dane zostały wczytane z pliku!");
+    } catch (err) {
+      console.error("Błąd parsowania JSON:", err);
+      alert("❌ Niepoprawny plik JSON");
+    }
+  };
+  reader.readAsText(file);
+});
+
+*/
+
+
+
+// 🔄 1. Automatycznie wczytaj dane z localStorage po starcie
+window.addEventListener("DOMContentLoaded", () => {
+  const savedData = localStorage.getItem("workedDays");
+  if (savedData) {
+    try {
+      workedDays = JSON.parse(savedData);
+      renderCalendar();
+    } catch (err) {
+      console.warn("❗ Błąd ładowania danych z localStorage:", err);
+    }
+  }
+});
+
+// 💾 2. Zapis do pliku JSON
+document.getElementById("download-button").addEventListener("click", () => {
+  const dataStr = JSON.stringify(workedDays, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const now = new Date();
+  const formattedDate = now.toISOString().slice(0, 10); // yyyy-mm-dd
+  const fileName = `dane_kalendarza_${formattedDate}.json`;
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+});
+
+// 📥 3. Wczytaj z pliku i zapisz do localStorage
+document.getElementById("load-from-file").addEventListener("click", () => {
+  document.getElementById("file-input").click();
+});
+
+document.getElementById("file-input").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      workedDays = JSON.parse(e.target.result);
+      localStorage.setItem("workedDays", JSON.stringify(workedDays)); // 🧠 Zapis lokalny
       renderCalendar();
       alert("✅ Dane zostały wczytane z pliku!");
     } catch (err) {
