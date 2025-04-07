@@ -95,7 +95,7 @@
 
     <div class="summary">
       <p>Godziny pracy: <span id="worked-hours">0</span>h</p>
-      <p>Nadgodziny: <span id="overtime">0</span>h</p>
+      <p>Nadgodziny: <span id="overtime">0</span></p>
       <p>Dni urlopu: <span id="holiday-days">0</span></p>
       <p>Dni L4: <span id="sick-days">0</span></p>
       <p>Planowane godziny: <span id="planned-hours">0</span>h</p>
@@ -124,7 +124,11 @@
       </select>
 
       <label>Nadgodziny (opcjonalnie):</label>
-      <input type="number" id="popup-overtime" min="0" />
+      <div class="overtime-input">
+        <input id="popup-overtime-hours" type="number" min="0" placeholder="h" style="width: 60px;"> 
+        <input id="popup-overtime-minutes" type="number" min="0" max="59" placeholder="min" style="width: 60px;"> min
+      </div>
+      
 
       <label>Notatka:</label>
       <textarea id="popup-note" rows="3" placeholder="Notatka..." style="width: 100%; margin-top: 10px;"></textarea>
