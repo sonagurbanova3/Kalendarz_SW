@@ -6,11 +6,11 @@ const plannedEl = document.getElementById("planned-hours");
 
 const popup = document.getElementById("day-popup");
 const popupDate = document.getElementById("popup-date");
-const popupPosition = document.getElementById("popup-position"); // ukryte pole
-const popupPositionGrid = document.getElementById("popup-position-grid"); // nowa siatka
+const popupPosition = document.getElementById("popup-position");
 const popupOvertime = document.getElementById("popup-overtime");
 const popupSave = document.getElementById("popup-save");
 const popupCancel = document.getElementById("popup-cancel");
+const popupNote = document.getElementById("popup-note");
 
 const calendarTitle = document.getElementById("calendar-title");
 const prevMonthBtn = document.getElementById("prev-month");
@@ -19,12 +19,24 @@ const nextMonthBtn = document.getElementById("next-month");
 const holidayEl = document.getElementById("holiday-days");
 const sickEl = document.getElementById("sick-days");
 
+const popupOvertimeFreeDay = document.getElementById("popup-overtime-free-day");
+
 const extendedShiftPositions = ["S21", "S22", "S36", "S37", "S39", "S40", "S56"];
-let workedDays = {};
+
+let workedDays = JSON.parse(localStorage.getItem("workedDays")) || {};
+
 let selectedSystem = parseInt(systemSelect.value);
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
+
+let currentNoteOpen = null;
+
+
+function saveWorkedDays() {
+    localStorage.setItem("workedDays", JSON.stringify(workedDays));
+  }
+  
 
 systemSelect.addEventListener("change", () => {
   selectedSystem = parseInt(systemSelect.value);
@@ -33,32 +45,102 @@ systemSelect.addEventListener("change", () => {
 
 popupCancel.addEventListener("click", () => popup.classList.add("hidden"));
 
-// === ZAMIANA SELECTA NA GRID Z BUTTONAMI ===
-for (let i = 1; i <= 60; i++) {
-  const btn = document.createElement("button");
-  const val = `S${i}`;
-  btn.textContent = val;
-  btn.addEventListener("click", () => {
-    popupPosition.value = val;
-    [...popupPositionGrid.children].forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
-  });
-  popupPositionGrid.appendChild(btn);
-}
-
-// ZMIANA: zawsze zapisuj po kliknięciu "Zapisz", niezależnie od daty
 popupSave.addEventListener("click", () => {
+    const dateKey = popup.dataset.date;
+    const position = popupPosition.value?.trim();
+  
+    const isWorked = document.getElementById("popup-confirmed").checked;
+    const isHoliday = document.getElementById("popup-holiday").checked;
+    const isSick = document.getElementById("popup-sick").checked;
+    const isFreeDay = popupOvertimeFreeDay.checked;
+  
+    if (!position && !isWorked && !isHoliday && !isSick && !isFreeDay) {
+      alert("Wybierz stanowisko lub zaznacz przepracowanie / urlop / zwolnienie / wolne za nadgodziny.");
+      return;
+    }
+  
+    if (!workedDays[dateKey]) workedDays[dateKey] = {};
+  
+    workedDays[dateKey].worked = isWorked;
+    workedDays[dateKey].isHoliday = isHoliday;
+    workedDays[dateKey].isSick = isSick;
+    workedDays[dateKey].note = popupNote.value.trim();
+    workedDays[dateKey].isFreeDayForOvertime = isFreeDay;
+    workedDays[dateKey].freeDayFromOvertime = isFreeDay;
+  
+    // ✅ ZACHOWAJ stanowisko jeśli nowe nie zostało wybrane, ale był plan
+    if (position) {
+      workedDays[dateKey].position = position;
+    } else if (!workedDays[dateKey].position && (isWorked || isFreeDay)) {
+      workedDays[dateKey].position = "";
+    }
+  
+    workedDays[dateKey].extraHours = parseInt(popupOvertime.value) || 0;
+  
+    popup.classList.add("hidden");
+    renderCalendar();
+    saveWorkedDays();
+
+  });
+  
+
+document.getElementById("remove-note").addEventListener("click", () => {
   const dateKey = popup.dataset.date;
-  if (!workedDays[dateKey]) workedDays[dateKey] = {};
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].note;
+    popupNote.value = "";
+   
+    renderCalendar();
+    saveWorkedDays();
+  }
+});
 
-  workedDays[dateKey].worked = document.getElementById("popup-confirmed").checked;
-  workedDays[dateKey].position = popupPosition.value;
-  workedDays[dateKey].extraHours = parseInt(popupOvertime.value) || 0;
-  workedDays[dateKey].isHoliday = document.getElementById("popup-holiday").checked;
-  workedDays[dateKey].isSick = document.getElementById("popup-sick").checked;
+document.getElementById("remove-worked").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].worked;
+    document.getElementById("popup-confirmed").checked = false;
+    renderCalendar();
+    saveWorkedDays();
+  }
+});
 
+document.getElementById("remove-holiday").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].isHoliday;
+    document.getElementById("popup-holiday").checked = false;
+    renderCalendar();
+    saveWorkedDays();
+  }
+});
+
+document.getElementById("remove-sick").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    delete workedDays[dateKey].isSick;
+    document.getElementById("popup-sick").checked = false;
+    renderCalendar();
+    saveWorkedDays();
+  }
+});
+
+document.getElementById("remove-overtime").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  if (workedDays[dateKey]) {
+    workedDays[dateKey].extraHours = 0;
+    popupOvertime.value = "";
+    renderCalendar();
+    saveWorkedDays();
+  }
+});
+
+document.getElementById("remove-all").addEventListener("click", () => {
+  const dateKey = popup.dataset.date;
+  delete workedDays[dateKey];
   popup.classList.add("hidden");
   renderCalendar();
+  saveWorkedDays();
 });
 
 prevMonthBtn.addEventListener("click", () => {
@@ -68,6 +150,7 @@ prevMonthBtn.addEventListener("click", () => {
     currentYear--;
   }
   renderCalendar();
+  saveWorkedDays();
 });
 
 nextMonthBtn.addEventListener("click", () => {
@@ -77,6 +160,7 @@ nextMonthBtn.addEventListener("click", () => {
     currentYear++;
   }
   renderCalendar();
+  saveWorkedDays();
 });
 
 function renderCalendar() {
@@ -122,8 +206,16 @@ function renderCalendar() {
     }
 
     const info = workedDays[dateKey];
+
+    // ✅ Automatyczne oznaczanie dni z przeszłości jako przepracowane
+    if (date < today && info && (info.position || info.extraHours) && !info.worked) {
+      info.worked = true;
+    }
+
     if (info?.isHoliday) div.classList.add("holiday");
     if (info?.isSick) div.classList.add("sick");
+    if (info?.isFreeDayForOvertime) div.classList.add("free-day");
+
     if (info?.worked) {
       div.classList.add("worked");
     } else if (info?.position || info?.extraHours) {
@@ -135,14 +227,57 @@ function renderCalendar() {
     if (info?.extraHours) html += `<div class="info">+${info.extraHours}h</div>`;
     if (info?.isHoliday) html += `<div class="info">URLOP</div>`;
     if (info?.isSick) html += `<div class="info">ZL</div>`;
+    if (info?.isFreeDayForOvertime) html += `<div class="info">Wolne (nadgodziny)</div>`;
     if (!info?.worked && (info?.position || info?.extraHours)) html += `<div class="info">PLAN</div>`;
+    if (info?.note) {
+      html += `
+        <svg class="note-icon" data-date="${dateKey}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#444">
+          <path d="M4 2h14a2 2 0 0 1 2 2v11l-4-4H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 6h10v2H4V8zm0 4h8v2H4v-2z"/>
+        </svg>
+      `;
+    }
 
     div.innerHTML = html;
     div.addEventListener("click", () => openPopup(dateKey, date));
     calendar.appendChild(div);
+
+    if (info?.note) {
+      div.querySelector(".note-icon").addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleNote(dateKey, date);
+      });
+    }
   }
 
   updateSummary();
+}
+
+function renderPositionTable() {
+  popupPosition.innerHTML = "";
+  const table = document.createElement("table");
+  table.className = "position-table-inner";
+
+  let tr = document.createElement("tr");
+  for (let i = 1; i <= 60; i++) {
+    const td = document.createElement("td");
+    const btn = document.createElement("button");
+    btn.textContent = `S${i}`;
+    btn.setAttribute('data-position', `S${i}`);
+    btn.className = "position-btn";
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".position-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      popupPosition.dataset.selected = `S${i}`;
+    });
+    td.appendChild(btn);
+    tr.appendChild(td);
+
+    if (i % 6 === 0) {
+      table.appendChild(tr);
+      tr = document.createElement("tr");
+    }
+  }
+  popupPosition.appendChild(table);
 }
 
 function openPopup(dateKey, dateObj) {
@@ -151,20 +286,18 @@ function openPopup(dateKey, dateObj) {
   popupDate.textContent = `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
 
   const info = workedDays[dateKey] || {};
-  popupPosition.value = info.position || "";
-
-  // zaznacz aktywny przycisk
-  [...popupPositionGrid.children].forEach(btn => {
-    if (btn.textContent === popupPosition.value) {
-      btn.classList.add("selected");
-    } else {
-      btn.classList.remove("selected");
-    }
-  });
+  renderPositionTable();
+  popupPosition.dataset.selected = info.position || "";
+  if (info.position) {
+    const activeBtn = [...document.querySelectorAll(".position-btn")].find(b => b.textContent === info.position);
+    if (activeBtn) activeBtn.classList.add("selected");
+  }
 
   popupOvertime.value = info.extraHours || "";
+  popupNote.value = info.note || "";
   document.getElementById("popup-holiday").checked = !!info.isHoliday;
   document.getElementById("popup-sick").checked = !!info.isSick;
+  popupOvertimeFreeDay.checked = !!info.isFreeDayForOvertime;
 
   const confirmedCheckbox = document.getElementById("popup-confirmed");
   confirmedCheckbox.checked = !!info.worked;
@@ -188,6 +321,11 @@ function updateSummary() {
     const weekday = date.getDay();
     const isWeekend = weekday === 0 || weekday === 6;
     const isExtended = extendedShiftPositions.includes(info.position);
+
+    if (info.freeDayFromOvertime) {
+      overtime -= 8;
+      continue;
+    }
 
     if (info.isHoliday) {
       leaveDays++;
@@ -232,4 +370,71 @@ function formatFullDate(today, year, month) {
   return `${dayNames[currentView.getDay()]}, ${currentView.getDate()} ${monthNames[currentView.getMonth()]} ${currentView.getFullYear()}`;
 }
 
+function toggleNote(dateKey, dateObj) {
+  const display = document.getElementById("note-display");
+  const content = document.getElementById("note-content");
+  const dateText = document.getElementById("note-date");
+
+  if (currentNoteOpen === dateKey) {
+    display.classList.add("hidden");
+    currentNoteOpen = null;
+    return;
+  }
+
+  const info = workedDays[dateKey];
+  if (!info?.note) return;
+
+  dateText.textContent = `${dateObj.getDate()}.${dateObj.getMonth() + 1}.${dateObj.getFullYear()}`;
+  content.textContent = info.note;
+  display.classList.remove("hidden");
+  currentNoteOpen = dateKey;
+}
+
 renderCalendar();
+
+
+const dayPopup = document.getElementById('day-popup');
+const positionPopup = document.getElementById('position-popup');
+const positionSelect = document.getElementById('popup-position');
+
+// Otwórz popup ze stanowiskami
+document.getElementById('show-positions-btn').addEventListener('click', () => {
+  dayPopup.classList.add('hidden');
+  positionPopup.classList.remove('hidden');
+});
+
+// Kliknięcie w stanowisko (S1–S60)
+document.addEventListener('click', function (e) {
+  if (e.target.classList.contains('position-btn')) {
+    const pos = e.target.getAttribute('data-position');
+    let optionExists = false;
+
+    // Sprawdź, czy opcja istnieje, jeśli nie – dodaj
+    for (let opt of positionSelect.options) {
+      if (opt.value === pos) {
+        optionExists = true;
+        break;
+      }
+    }
+
+    if (!optionExists) {
+      const newOption = document.createElement('option');
+      newOption.value = pos;
+      newOption.textContent = pos;
+      positionSelect.appendChild(newOption);
+    }
+
+    // Ustaw jako wybraną
+    positionSelect.value = pos;
+
+    // Zamknij popup stanowisk, pokaż główny popup
+    positionPopup.classList.add('hidden');
+    dayPopup.classList.remove('hidden');
+  }
+});
+
+// Anuluj wybór stanowiska
+document.getElementById('cancel-position-select').addEventListener('click', () => {
+  positionPopup.classList.add('hidden');
+  dayPopup.classList.remove('hidden');
+});
