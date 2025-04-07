@@ -463,3 +463,47 @@ document.getElementById('cancel-position-select').addEventListener('click', () =
   positionPopup.classList.add('hidden');
   dayPopup.classList.remove('hidden');
 });
+
+
+
+
+
+document.getElementById("download-button").addEventListener("click", () => {
+  const dataStr = JSON.stringify(workedDays, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "dane_kalendarza.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+});
+
+
+
+
+
+
+document.getElementById("load-from-file").addEventListener("click", () => {
+  document.getElementById("file-input").click();
+});
+
+document.getElementById("file-input").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      workedDays = JSON.parse(e.target.result);
+      renderCalendar();
+      alert("✅ Dane zostały wczytane z pliku!");
+    } catch (err) {
+      console.error("Błąd parsowania JSON:", err);
+      alert("❌ Niepoprawny plik JSON");
+    }
+  };
+  reader.readAsText(file);
+});
