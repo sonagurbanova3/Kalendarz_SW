@@ -17,6 +17,8 @@ const prevMonthBtn = document.getElementById("prev-month");
 const nextMonthBtn = document.getElementById("next-month");
 
 const holidayEl = document.getElementById("holiday-days");
+const holidayFromPreviousYear = document.getElementById("holiday-prev");
+
 const sickEl = document.getElementById("sick-days");
 
 const popupOvertimeFreeDay = document.getElementById("popup-overtime-free-day");
@@ -51,45 +53,47 @@ systemSelect.addEventListener("change", () => {
 popupCancel.addEventListener("click", () => popup.classList.add("hidden"));
 
 popupSave.addEventListener("click", () => {
-    const dateKey = popup.dataset.date;
-    const position = popupPosition.value?.trim();
-  
-    const isWorked = document.getElementById("popup-confirmed").checked;
-    const isHoliday = document.getElementById("popup-holiday").checked;
-    const isSick = document.getElementById("popup-sick").checked;
-    const isFreeDay = popupOvertimeFreeDay.checked;
-  
-    if (!position && !isWorked && !isHoliday && !isSick && !isFreeDay) {
-      alert("Wybierz stanowisko lub zaznacz przepracowanie / urlop / zwolnienie / wolne za nadgodziny.");
-      return;
-    }
-  
-    if (!workedDays[dateKey]) workedDays[dateKey] = {};
-  
-    workedDays[dateKey].worked = isWorked;
-    workedDays[dateKey].isHoliday = isHoliday;
-    workedDays[dateKey].isSick = isSick;
-    workedDays[dateKey].note = popupNote.value.trim();
-    workedDays[dateKey].isFreeDayForOvertime = isFreeDay;
-    workedDays[dateKey].freeDayFromOvertime = isFreeDay;
-  
-    // ✅ ZACHOWAJ stanowisko jeśli nowe nie zostało wybrane, ale był plan
-    if (position) {
-      workedDays[dateKey].position = position;
-    } else if (!workedDays[dateKey].position && (isWorked || isFreeDay)) {
-      workedDays[dateKey].position = "";
-    }
-  
-    const extraH = parseInt(document.getElementById("popup-overtime-hours").value) || 0;
-    const extraM = parseInt(document.getElementById("popup-overtime-minutes").value) || 0;
-    workedDays[dateKey].extraHours = extraH + extraM / 60;
-    
-  
-    popup.classList.add("hidden");
-    renderCalendar();
-    saveWorkedDays();
+  const dateKey = popup.dataset.date;
+  const position = popupPosition.value?.trim();
 
-  });
+  const isWorked = document.getElementById("popup-confirmed").checked;
+  const isHoliday = document.getElementById("popup-holiday").checked;
+  const isSick = document.getElementById("popup-sick").checked;
+  const isFreeDay = popupOvertimeFreeDay.checked;
+  const isHolidayFromPreviousYear = document.getElementById("popup-holiday-previous").checked;
+
+  // ✅ Sprawdź czy cokolwiek zaznaczono – ale nie wymagaj stanowiska dla urlopu z zeszłego roku
+  if (!position && !isWorked && !isHoliday && !isSick && !isFreeDay && !isHolidayFromPreviousYear) {
+    alert("Wybierz stanowisko lub zaznacz przepracowanie / urlop / zwolnienie / wolne za nadgodziny.");
+    return;
+  }
+
+  if (!workedDays[dateKey]) workedDays[dateKey] = {};
+
+  workedDays[dateKey].worked = isWorked;
+  workedDays[dateKey].isHoliday = isHoliday;
+  workedDays[dateKey].isHolidayFromPreviousYear = isHolidayFromPreviousYear;
+  workedDays[dateKey].isSick = isSick;
+  workedDays[dateKey].note = popupNote.value.trim();
+  workedDays[dateKey].isFreeDayForOvertime = isFreeDay;
+  workedDays[dateKey].freeDayFromOvertime = isFreeDay;
+
+  // ✅ Zachowaj stanowisko jeśli potrzebne
+  if (position) {
+    workedDays[dateKey].position = position;
+  } else if (!workedDays[dateKey].position && (isWorked || isFreeDay)) {
+    workedDays[dateKey].position = "";
+  }
+
+  const extraH = parseInt(document.getElementById("popup-overtime-hours").value) || 0;
+  const extraM = parseInt(document.getElementById("popup-overtime-minutes").value) || 0;
+  workedDays[dateKey].extraHours = extraH + extraM / 60;
+
+  popup.classList.add("hidden");
+  renderCalendar();
+  saveWorkedDays();
+});
+
   
 
 document.getElementById("remove-note").addEventListener("click", () => {
@@ -223,6 +227,10 @@ function renderCalendar() {
     }
 
     if (info?.isHoliday) div.classList.add("holiday");
+    if (info?.isHolidayFromPreviousYear) {
+      div.classList.add("previous-holiday");
+    }
+    
     if (info?.isSick) div.classList.add("sick");
     if (info?.isFreeDayForOvertime) div.classList.add("free-day");
 
@@ -242,9 +250,17 @@ function renderCalendar() {
     }
     
     if (info?.isHoliday) html += `<div class="info">URLOP</div>`;
+    if (info?.isHolidayFromPreviousYear) {
+      const prevYear = new Date().getFullYear() - 1;
+      html += `<div class="info">URLOP-${prevYear}</div>`;
+    }
+    
     if (info?.isSick) html += `<div class="info">ZL</div>`;
     if (info?.isFreeDayForOvertime) html += `<div class="info">Wolne (nadgodziny)</div>`;
-    if (!info?.worked && (info?.position || info?.extraHours)) html += `<div class="info">PLAN</div>`;
+    if (!info?.worked && (info?.position || info?.extraHours) && !info?.holidayFromPreviousYear) {
+      div.classList.add("planned");
+    }
+    
     if (info?.note) {
       html += `
         <svg class="note-icon" data-date="${dateKey}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#444">
@@ -315,6 +331,8 @@ function openPopup(dateKey, dateObj) {
   
   popupNote.value = info.note || "";
   document.getElementById("popup-holiday").checked = !!info.isHoliday;
+  document.getElementById("popup-holiday-previous").checked = !!info.isHolidayFromPreviousYear;
+
   document.getElementById("popup-sick").checked = !!info.isSick;
   popupOvertimeFreeDay.checked = !!info.isFreeDayForOvertime;
 
@@ -328,10 +346,11 @@ function updateSummary() {
   let hoursWorked = 0;
   let overtime = 0;
   let plannedHours = 0;
-  let leaveDays = 0;
-  let sickDays = 0;
-  let currentMonthLeave = 0;
-  let currentMonthSick = 0;
+  let leaveDaysInYear = 0;
+  let leaveDaysInMonth = 0;
+  let leaveDaysFromPreviousYear = 0;
+  let sickDaysInYear = 0;
+  let sickDaysInMonth = 0;
 
   for (const key in workedDays) {
     const info = workedDays[key];
@@ -339,68 +358,79 @@ function updateSummary() {
 
     const [year, month, day] = key.split("-").map(Number);
     const date = new Date(year, month, day);
-    const weekday = date.getDay();
-    const isWeekend = weekday === 0 || weekday === 6;
-    const isExtended = extendedShiftPositions.includes(info.position);
-    const extra = info.extraHours || 0;
-
     const isCurrentMonth = year === currentYear && month === currentMonth;
-    const isInRangeForLeaveAndSick = year === currentYear && month <= currentMonth;
+    const isCurrentOrPastMonth = year === currentYear && month <= currentMonth;
 
-    // 📌 Sumowanie urlopów i zwolnień
-    if (isInRangeForLeaveAndSick) {
-      if (info.isHoliday) {
-        leaveDays++;
-        if (isCurrentMonth) currentMonthLeave++;
-      }
-      if (info.isSick) {
-        sickDays++;
-        if (isCurrentMonth) currentMonthSick++;
+    // Liczenie urlopów z poprzedniego roku
+    if (info.isHolidayFromPreviousYear) {
+      leaveDaysFromPreviousYear++;
+    }
+
+    // Liczenie urlopów całorocznych i w bieżącym miesiącu
+    if (isCurrentOrPastMonth && info.isHoliday) {
+      leaveDaysInYear++;
+      if (isCurrentMonth) {
+        leaveDaysInMonth++;
       }
     }
 
-    // 📌 Sumowanie tylko dla aktualnego miesiąca
-    if (!isCurrentMonth) continue;
-
-    if (info.freeDayFromOvertime) {
-      overtime -= 8;
-      continue;
+    // Liczenie L4 całorocznych i w bieżącym miesiącu
+    if (isCurrentOrPastMonth && info.isSick) {
+      sickDaysInYear++;
+      if (isCurrentMonth) {
+        sickDaysInMonth++;
+      }
     }
 
-    const isPlanned = !info.worked;
+    // 📌 Sumowanie danych dla bieżącego miesiąca
+    if (isCurrentMonth) {
+      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+      const isExtended = extendedShiftPositions.includes(info.position);
+      const extra = info.extraHours || 0;
 
-    if (isPlanned) {
-      plannedHours += isExtended ? 12 : 8;
-    }
-
-    if (info.worked) {
-      let baseHours = isExtended ? 12 : 8;
-      let baseOvertime = 0;
-
-      if (!isWeekend) {
-        // Pn–Pt
-        if (isExtended) {
-          baseOvertime = 4;
-        } else {
-          baseOvertime = 0;
-        }
-      } else {
-        // Sb–Nd
-        baseOvertime = baseHours;
+      if (info.freeDayFromOvertime) {
+        overtime -= 8;
+        continue;
       }
 
-      hoursWorked += baseHours + extra;
-      overtime += baseOvertime + extra;
+      const isPlanned = !info.worked;
+
+      //zmiana1 – pomiń zwolnienia i urlopy przy planowanych godzinach
+if (isPlanned && !info.isHoliday && !info.isHolidayFromPreviousYear && !info.isSick) {
+  plannedHours += isExtended ? 12 : 8;
+}
+
+//zmiana2 – pomiń L4 i urlop przy zliczaniu przepracowanych
+if (info.worked && !info.isHoliday && !info.isHolidayFromPreviousYear && !info.isSick) {
+  let baseHours = isExtended ? 12 : 8;
+  let baseOvertime = 0;
+
+  if (!isWeekend) {
+    if (isExtended) baseOvertime = 4;
+  } else {
+    baseOvertime = baseHours;
+  }
+
+  hoursWorked += baseHours + extra;
+  overtime += baseOvertime + extra;
+}
+
     }
   }
 
-  // 📌 Aktualizacja danych na stronie
+  // ✅ Aktualizacja HTML
   workedEl.textContent = hoursWorked;
   overtimeEl.textContent = formatExtraHours(overtime);
   plannedEl.textContent = plannedHours;
 
-  holidayEl.textContent = `${leaveDays} (z czego ${currentMonthLeave} dni w tym miesiącu)`;
-  sickEl.textContent = `${sickDays} (z czego ${currentMonthSick} dni w tym miesiącu)`;
+  // ✅ Wyświetlanie urlopów
+  holidayEl.textContent = `${leaveDaysInYear} dni w roku, ${leaveDaysInMonth} dni w tym miesiącu`;
+
+  // ✅ Wyświetlanie L4
+  sickEl.textContent = `${sickDaysInYear} dni w roku, ${sickDaysInMonth} dni w tym miesiącu`;
+
+  // ✅ Urlopy z poprzedniego roku
+  document.getElementById("holiday-prev").textContent = leaveDaysFromPreviousYear;
 }
 
 

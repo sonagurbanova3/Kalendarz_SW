@@ -429,3 +429,10 @@ body {
 .summary{
     margin-left: 20px;
   }
+
+  .previous-holiday {
+    background-color: #2a3c2a; /* jasnozielony */
+    border: 2px dashed purple;
+    color: #1e1e1e;
+  }
+  
